@@ -1,4 +1,7 @@
-# Deno Serve
+# deno_server
+
+![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
+
 
 The ubiquitous hello world example:
 
