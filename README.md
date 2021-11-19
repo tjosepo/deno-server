@@ -2,11 +2,10 @@
 
 ![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
 
-
 The ubiquitous hello world example:
 
 ```ts
-import { get, serve } from "https://deno.land/x/something/mod.ts";
+import { get, serve } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   get("/", () => "Hello world!");
@@ -25,7 +24,7 @@ import {
   path,
   post,
   serve,
-} from "https://deno.land/x/something/mod.ts";
+} from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   get("/hello", () => "Hello world!");
@@ -53,7 +52,7 @@ same purpose as middlewares and guards from other frameworks. Effects are
 performed before every request.
 
 ```ts
-import { get, serve, useEffect } from "https://deno.land/x/something/mod.ts";
+import { get, serve, useEffect } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   // Similar to middlewares and guards:
@@ -75,7 +74,7 @@ Effects may also return a cleanup function to be performed after the request
 object.
 
 ```ts
-import { get, serve, useEffect } from "https://deno.land/x/something/mod.ts";
+import { get, serve, useEffect } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   // Implements a logger
@@ -105,7 +104,7 @@ function that can be used to simulate a request.
 
 ```ts
 export { assertEquals } from "https://deno.land/std/testing/asserts.ts";
-import { get, mock } from "https://deno.land/x/something/mod.ts";
+import { get, mock } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 async function test() {
   const fetch = mock(() => get("/foo", "Hello world!"));
