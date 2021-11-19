@@ -2,35 +2,41 @@ import { lookup } from "./deps.ts";
 import { get } from "../mod.ts";
 
 export interface ServeFilesOptions {
-  dir: string;
+  src: string;
   defaultFile?: string;
 }
 
-export function serveFiles(init: ServeFilesOptions) {
-  const { dir, defaultFile = "index.html" } = init;
+const normalize = (dir: string) => dir.replace(/\/+$/, "");
 
-  get("(.*)", async (_, params) => {
-    // Get the key which corresponds to the group "/(.*)"
-    const key = Math.max(
-      ...Object.keys(params).map(parseInt).filter(Number.isInteger),
-    );
-    const filepath = params[key];
+export function serveFiles(init: ServeFilesOptions) {
+  const { defaultFile = "index.html" } = init;
+  const src = normalize(init.src);
+
+  get("/:slugs*", async (_, params) => {
+    const filepath = params.slugs?.join("/") ?? "";
 
     let data: Uint8Array | undefined = undefined;
     let contentType = "";
 
-    // Try file
+    // Try URL
     try {
-      data = await Deno.readFile(dir + "/" + filepath);
-      contentType = lookup(filepath) ?? "";
+      const url = new URL(src + "/" + filepath);
+      const { body, headers, status, statusText } = await fetch(url);
+      return new Response(body, { headers, status, statusText });
     } catch {
-      // Try default file
+      // Try file
       try {
-        data = await Deno.readFile(dir + "/" + filepath + "/" + defaultFile);
-        contentType = lookup(defaultFile) ?? "";
+        data = await Deno.readFile(src + "/" + filepath);
+        contentType = lookup(filepath) ?? "";
       } catch {
-        // Couldn't find a file
-        return;
+        // Try default file
+        try {
+          data = await Deno.readFile(src + "/" + filepath + "/" + defaultFile);
+          contentType = lookup(defaultFile) ?? "";
+        } catch {
+          // Couldn't find a file
+          return;
+        }
       }
     }
 

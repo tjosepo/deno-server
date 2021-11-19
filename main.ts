@@ -5,8 +5,10 @@ serve(() => {
   useLogger();
   useCors({ allowHeaders: "Content-Type" });
 
-  path(() => {
-    serveFiles({ dir: "./build" });
+  path("/", () => {
+    serveFiles({
+      src: "./util",
+    });
   });
 
   // path("foo", () => {
@@ -15,8 +17,4 @@ serve(() => {
   //     get(() => "bar");
   //   });
   // });
-
-  get("/", () => {
-    return "Hello world!";
-  });
 });

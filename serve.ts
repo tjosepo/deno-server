@@ -14,11 +14,8 @@ import { Found, NotFound } from "./responses.ts";
 interface Route {
   method: string;
   path: string;
-  match?: MatchFunction<Record<string, string>>;
-  handler: (
-    request: Request,
-    params: Record<string, string>,
-  ) => HandlerResponse;
+  match?: MatchFunction<Record<string, any>>;
+  handler: (request: Request, params: Record<string, any>) => HandlerResponse;
   effects: ((
     request: Request,
   ) => EffectCleanup | Promise<EffectCleanup> | void)[];

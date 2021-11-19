@@ -12,7 +12,7 @@ export type MethodHook = (
   path: string,
   handler: (
     request: Request,
-    params: Record<string, string>,
+    params: Record<string, string & string[]>,
   ) => HandlerResponse,
 ) => void;
 type MethodHookOverload =
@@ -20,13 +20,13 @@ type MethodHookOverload =
   & ((
     handler: (
       request: Request,
-      params: Record<string, string>,
+      params: Record<string, string & string[]>,
     ) => HandlerResponse,
   ) => void);
 
 type Handler = (
   request: Request,
-  params: Record<string, string>,
+  params: Record<string, string & string[]>,
 ) => HandlerResponse;
 
 export type EffectHook = (
