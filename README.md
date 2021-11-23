@@ -1,21 +1,34 @@
+![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
 # deno_server
 
-![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
+deno_server is a very lightweight web framework. deno_server's main goal are simplicity, composability and implicitness.
 
-The ubiquitous hello world example:
+Some key features of deno_server:
+- Uses Web Platform APIs instead of using proprietary abstractions.
+- There is no "app" or "router" object to manage in your code.
+- Uses hooks to allow code to be highly composable.
+- Has a tiny API surface.
 
+## Quick start 
+
+### Add dependency
 ```ts
-import {
-  get,
-  serve,
-} from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
+export * from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
+```
+
+### Start programming
+```ts
+import { get, serve } from "./deps.ts";
 
 serve(() => {
   get("/", () => "Hello world!");
 });
 ```
 
-## Path hook
+## Documentation
+
+<details>
+<summary>🛣️ Path hook</summary>
 
 The _Path_ hook lets you group endpoints together.
 
@@ -47,8 +60,10 @@ serve(() => {
 The _Path_ hook can also be used to encapsulate side effects from the _Effect_
 hook. An effect declared inside a path will only affect endpoints from that path
 and it's subpaths.
+</details>
 
-## Effect Hook
+<details>
+<summary>⚡ Effect Hook</summary>
 
 The _Effect_ hook lets you perform side effects in a component. It serves the
 same purpose as middlewares and guards from other frameworks. Effects are
@@ -107,8 +122,10 @@ serve(() => {
 Unlike middlewares, **effects cannot modify the request object**. The request
 object that a route receives is the request object that was received by the
 server. However, effects can interrupt the processing of a request by throwing.
+</details>
 
-## Testing
+<details>
+  <summary>🧪 Testing</summary>
 
 You can use the _Mock_ hook to test your components. It returns a special fetch
 function that can be used to simulate a request.
@@ -126,3 +143,4 @@ async function test() {
   assertEquals(await response.text(), "Hello world!");
 }
 ```
+</details>
