@@ -1,14 +1,52 @@
-import { Forbidden, NoContent, useEffect } from "../mod.ts";
+import { use } from "../mod.ts";
+import * as Http from "../responses.ts";
 
 interface CorsInit {
+  /**
+   * Indicates whether or not the response to the request
+   * can be exposed when the credentials flag is true. When used as part of
+   * a response to a preflight request, this indicates whether or not the
+   * actual request can be made using credentials.
+   *
+   * Default: `false`
+   */
   allowCredentials?: boolean;
+  /**
+   * Defines a list of request headers that can be used when making the actual
+   * request. This is in response to a preflight request.
+   *
+   * Default: `""`
+   */
   allowHeaders?: string;
+  /**
+   * Defines a list methods allowed when accessing the resource.
+   * This is used in response to a preflight request.
+   *
+   * Default: `"GET,HEAD,PUT,PATCH,POST,DELETE"`
+   */
   allowMethods?: string;
+  /**
+   * Defines a list of origins that may access the resource.
+   *
+   * Default: `"*"`
+   */
   allowOrigins?: string;
+  /**
+   * Defines a whitelist headers that clients are allowed to
+   * access.
+   *
+   * Default: `""` */
   exposeHeaders?: string;
+  /**
+   * MaxAge indicates how long (in seconds) the results of a preflight request
+   * can be cached.
+   *
+   * Default: `5`
+   */
   maxAge?: number;
 }
 
+/** Plugin to enable Cross-Origin Resource Sharing with various options. */
 export const useCors = (init: CorsInit = {}) => {
   const {
     allowCredentials = false,
@@ -19,7 +57,7 @@ export const useCors = (init: CorsInit = {}) => {
     maxAge = 5,
   } = init;
 
-  useEffect((request: Request) => {
+  use((request) => {
     if (request.method === "OPTIONS") {
       const { headers } = request;
 
@@ -36,12 +74,12 @@ export const useCors = (init: CorsInit = {}) => {
           .map((header) => header.trim())
           .forEach((header) => {
             if (allowedHeaders.includes(header)) return;
-            else throw Forbidden();
+            else throw Http.Forbidden();
           });
       }
     }
 
-    return (response: Response) => {
+    return ({ response }) => {
       const { headers } = response;
 
       if (!headers.has("Access-Control-Allow-Credentials")) {
@@ -72,7 +110,7 @@ export const useCors = (init: CorsInit = {}) => {
       }
 
       if (request.method === "OPTIONS" && response.status !== 204) {
-        response = NoContent({ headers });
+        response = Http.NoContent({ headers });
       }
 
       return response;

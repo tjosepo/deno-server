@@ -1,26 +1,35 @@
-![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
 # deno_server
 
-deno_server is a very lightweight web framework. deno_server's main goal are simplicity, composability and implicitness.
+![Tests](https://github.com/tjosepo/deno-server/actions/workflows/tests.yml/badge.svg)
+
+deno_server is a very lightweight web framework. deno_server's main goal are
+simplicity, composability and implicitness.
 
 Some key features of deno_server:
+
 - Uses Web Platform APIs instead of using proprietary abstractions.
 - There is no "app" or "router" object to manage in your code.
 - Uses hooks to allow code to be highly composable.
 - Has a tiny API surface.
 
-## Quick start 
+## Quick start
 
 ### Add dependency
+
 ```ts
 export * from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
+export * from "https://github.com/tjosepo/deno_server/raw/main/plugin/mod.ts";
 ```
 
 ### Start programming
+
 ```ts
-import { get, serve } from "./deps.ts";
+import { get, serve, useCors, useLogging } from "./deps.ts";
 
 serve(() => {
+  useLogging();
+  useCors();
+
   get("/", () => "Hello world!");
 });
 ```
@@ -46,39 +55,40 @@ serve(() => {
   get("/hello", () => "Hello world!");
 
   path("/user", () => {
-    get(getAllUsers);
-    post(createUser);
+    get("/", getAllUsers);
+    post("/", createUser);
     path("/:id", () => {
-      get(getOneUser);
-      patch(updateUser);
-      del(deleteUser);
+      get("/", getOneUser);
+      patch("/", updateUser);
+      del("/", deleteUser);
     });
   });
 }, { port: 8080 });
 ```
 
-The _Path_ hook can also be used to encapsulate side effects from the _Effect_
+The _Path_ hook can also be used to encapsulate side effects from the _Use_
 hook. An effect declared inside a path will only affect endpoints from that path
 and it's subpaths.
+
 </details>
 
 <details>
-<summary>⚡ Effect Hook</summary>
+<summary>⚡ Use Hook</summary>
 
-The _Effect_ hook lets you perform side effects in a component. It serves the
-same purpose as middlewares and guards from other frameworks. Effects are
-performed before every request.
+The _Use_ hook lets you perform side effects in a reply. It serves the same
+purpose as middlewares and guards from other frameworks. Effects are performed
+before and after every request.
 
 ```ts
 import {
   get,
   serve,
-  useEffect,
+  use,
 } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   // Similar to middlewares and guards:
-  useEffect((request) => {
+  use((request) => {
     if (request.method !== "GET") {
       throw new Response("Method Not Allowed", {
         status: 405,
@@ -91,23 +101,23 @@ serve(() => {
 });
 ```
 
-Effects may also return a cleanup function to be performed after the request
-(even if an exception occurred). Cleanup functions may return a new response
-object.
+An effect may return a cleanup function to be performed after the request (even
+if an exception occurred). Cleanup functions may be used to view the repsonse
+and modify it by giving it additional properties.
 
 ```ts
 import {
   get,
   serve,
-  useEffect,
+  use,
 } from "https://github.com/tjosepo/deno_server/raw/main/mod.ts";
 
 serve(() => {
   // Implements a logger
-  useEffect((request) => {
+  use((request) => {
     const start = Date.now();
 
-    return (response) => {
+    return ({ response }) => {
       const ms = Date.now() - start;
       console.log(
         `[${response.status}] ${request.method} ${request.url} ${ms}ms`,
@@ -122,6 +132,7 @@ serve(() => {
 Unlike middlewares, **effects cannot modify the request object**. The request
 object that a route receives is the request object that was received by the
 server. However, effects can interrupt the processing of a request by throwing.
+
 </details>
 
 <details>
@@ -139,8 +150,9 @@ import {
 
 async function test() {
   const fetch = mock(() => get("/foo", "Hello world!"));
-  const response = await fetch("http://test.com/foo");
+  const response = await fetch("/foo");
   assertEquals(await response.text(), "Hello world!");
 }
 ```
+
 </details>

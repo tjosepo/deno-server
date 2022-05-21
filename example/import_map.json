@@ -1,0 +1,1 @@
+{ "imports": { "server": "../mod.ts", "server/plugin": "../plugin/mod.ts" } }

@@ -1,17 +1,17 @@
-import { assert, assertEquals } from "./deps_test.ts";
-import { get, mock, path, post, useEffect } from "./mod.ts";
+import { assertEquals } from "./deps_test.ts";
+import { get, mock, path, post, use } from "../mod.ts";
 
 Deno.test("[serve] GET request", async () => {
   const fetch = await mock(() => get("/", () => "foo"));
-  const response = await fetch("http://www.example.com");
+  const response = await fetch("/");
   const body = await response.text();
 
   assertEquals(body, "foo");
 });
 
 Deno.test("[serve] POST request", async () => {
-  const fetch = await mock(() => post(() => "foo"));
-  const response = await fetch("http://www.example.com", { method: "POST" });
+  const fetch = await mock(() => post("/", () => "foo"));
+  const response = await fetch("/", { method: "POST" });
   const body = await response.text();
 
   assertEquals(body, "foo");
@@ -19,9 +19,9 @@ Deno.test("[serve] POST request", async () => {
 
 Deno.test("[serve] HEAD request", async () => {
   const fetch = await mock(() =>
-    get(() => new Response("Hello", { headers: { foo: "bar" } }))
+    get("/", () => new Response("Hello", { headers: { foo: "bar" } }))
   );
-  const response = await fetch("http://www.example.com", { method: "HEAD" });
+  const response = await fetch("/", { method: "HEAD" });
   assertEquals(response.headers.get("foo"), "bar");
 
   const body = await response.text();
@@ -34,7 +34,7 @@ Deno.test("[serve] Path - Simple request", async () => {
       get("/", () => "foo");
     });
   });
-  const response = await fetch("http://www.example.com/foo");
+  const response = await fetch("/foo/");
   const body = await response.text();
   assertEquals(body, "foo");
 });
@@ -42,85 +42,85 @@ Deno.test("[serve] Path - Simple request", async () => {
 Deno.test("[serve] Path - Nested paths", async () => {
   const fetch = await mock(() => {
     path("/foo", () => {
-      get(() => "foo");
+      get("/", () => "foo");
       path("/bar", () => {
-        get(() => "bar");
+        get("/", () => "bar");
       });
     });
   });
 
-  let response = await fetch("http://www.example.com/foo");
+  let response = await fetch("/foo/");
   let body = await response.text();
   assertEquals(body, "foo");
 
-  response = await fetch("http://www.example.com/foo/bar");
+  response = await fetch("/foo/bar/");
   body = await response.text();
   assertEquals(body, "bar");
 });
 
 Deno.test("[serve] Path - Encapsulated effects", async () => {
   const fetch = await mock(() => {
-    useEffect(() =>
-      (res) => {
-        res.headers.set("1", "true");
-        return res;
+    use(() =>
+      ({ response }) => {
+        response.headers.set("1", "true");
+        return response;
       }
     );
-    get(() => null);
+    get("/", () => null);
 
     path("/foo", () => {
-      useEffect(() =>
-        (res) => {
-          res.headers.set("2", "true");
-          return res;
+      use(() =>
+        ({ response }) => {
+          response.headers.set("2", "true");
+          return response;
         }
       );
-      get(() => null);
+      get("/", () => null);
     });
 
     path("/bar", () => {
-      useEffect(() =>
-        (res) => {
-          res.headers.set("3", "true");
-          return res;
+      use(() =>
+        ({ response }) => {
+          response.headers.set("3", "true");
+          return response;
         }
       );
-      get(() => null);
+      get("/", () => null);
 
       path("/baz", () => {
-        useEffect(() =>
-          (res) => {
-            res.headers.set("4", "true");
-            return res;
+        use(() =>
+          ({ response }) => {
+            response.headers.set("4", "true");
+            return response;
           }
         );
-        get(() => null);
+        get("/", () => null);
       });
     });
   });
 
-  let response = await fetch("http://www.example.com/");
+  let response = await fetch("/");
   let headers = response.headers;
   assertEquals(headers.has("1"), true);
   assertEquals(headers.has("2"), false);
   assertEquals(headers.has("3"), false);
   assertEquals(headers.has("4"), false);
 
-  response = await fetch("http://www.example.com/foo");
+  response = await fetch("/foo/");
   headers = response.headers;
   assertEquals(headers.has("1"), true);
   assertEquals(headers.has("2"), true);
   assertEquals(headers.has("3"), false);
   assertEquals(headers.has("4"), false);
 
-  response = await fetch("http://www.example.com/bar");
+  response = await fetch("/bar/");
   headers = response.headers;
   assertEquals(headers.has("1"), true);
   assertEquals(headers.has("2"), false);
   assertEquals(headers.has("3"), true);
   assertEquals(headers.has("4"), false);
 
-  response = await fetch("http://www.example.com/bar/baz");
+  response = await fetch("/bar/baz/");
   headers = response.headers;
   assertEquals(headers.has("1"), true);
   assertEquals(headers.has("2"), false);
@@ -128,10 +128,10 @@ Deno.test("[serve] Path - Encapsulated effects", async () => {
   assertEquals(headers.has("4"), true);
 });
 
-Deno.test("[serve] useEffect - Act as guard", async () => {
+Deno.test("[serve] use - Act as guard", async () => {
   let reached = false;
   const fetch = await mock(() => {
-    useEffect(() => {
+    use(() => {
       throw new Response("guarded");
     });
     get("/", () => {
@@ -139,41 +139,41 @@ Deno.test("[serve] useEffect - Act as guard", async () => {
       return "foo";
     });
   });
-  const response = await fetch("http://www.example.com");
+  const response = await fetch("/");
   const body = await response.text();
 
   assertEquals(body, "guarded");
   assertEquals(reached, false);
 });
 
-Deno.test("[serve] useEffect - Cleanup response", async () => {
+Deno.test("[serve] use - Cleanup response", async () => {
   const fetch = await mock(() => {
-    useEffect(() =>
-      async (res) => {
-        const body = await res.text();
+    use(() =>
+      async ({ response }) => {
+        const body = await response.text();
         return new Response(body.toUpperCase());
       }
     );
     get("/", () => "foo");
   });
-  const response = await fetch("http://www.example.com");
+  const response = await fetch("/");
   const body = await response.text();
 
   assertEquals(body, "FOO");
 });
 
-Deno.test("[serve] useEffect - Run in order", async () => {
+Deno.test("[serve] use - Run in order", async () => {
   let order = "";
 
   const fetch = await mock(() => {
-    useEffect(() => {
+    use(() => {
       order += "1";
       return () => {
         order += "5";
       };
     });
 
-    useEffect(() => {
+    use(() => {
       order += "2";
       return () => {
         order += "4";
@@ -185,35 +185,35 @@ Deno.test("[serve] useEffect - Run in order", async () => {
     });
   });
 
-  await fetch("http://www.example.com");
+  await fetch("/");
   assertEquals(order, "12345");
 });
 
-Deno.test("[serve] useEffect - Run in order inside paths", async () => {
+Deno.test("[serve] use - Run in order inside paths", async () => {
   let order = "";
 
   const fetch = await mock(() => {
-    useEffect(() => {
+    use(() => {
       order += "1";
       return () => {
         order += "7";
       };
     });
 
-    path(() => {
-      useEffect(() => {
+    path("/", () => {
+      use(() => {
         order += "3";
         return () => {
           order += "5";
         };
       });
 
-      get(() => {
+      get("", () => {
         order += "4";
       });
     });
 
-    useEffect(() => {
+    use(() => {
       order += "2";
       return () => {
         order += "6";
@@ -221,6 +221,6 @@ Deno.test("[serve] useEffect - Run in order inside paths", async () => {
     });
   });
 
-  await fetch("http://www.example.com");
+  await fetch("/");
   assertEquals(order, "1234567");
 });

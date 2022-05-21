@@ -1,8 +1,4 @@
-import {
-  assert,
-  assertEquals,
-} from "https://deno.land/std@0.115.1/testing/asserts.ts";
-
+import { assert } from "https://deno.land/std@0.115.1/testing/asserts.ts";
 import { useCors } from "./cors.ts";
 import { mock } from "../mod.ts";
 

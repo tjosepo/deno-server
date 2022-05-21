@@ -86,3 +86,11 @@ export const MethodNotAllowed: MethodNotAllowedResponse = (
   headers.set("Allow", allow);
   return new Response(body, { status, statusText, headers });
 };
+
+/** 500 */
+export const InternalServerError: GenericResponse = (body, init = {}) => {
+  const status = Status.InternalServerError;
+  const statusText = STATUS_TEXT.get(status);
+  body = body ?? `${status} ${statusText}`;
+  return new Response(body, { status, statusText, headers: init.headers });
+};
