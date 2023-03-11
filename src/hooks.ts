@@ -1,6 +1,12 @@
 import type { MethodHook, PathHook, UseHook } from "./types.ts";
 import { getDispatcher } from "./dispatcher.ts";
 
+/** Adds a request handler for all methods to the specified pathname. */
+export const all: MethodHook = (pathname, handler) => {
+  const dispatcher = getDispatcher();
+  return dispatcher.get(pathname, handler);
+};
+
 /** Adds a `GET` request handler for the specified pathname. */
 export const get: MethodHook = (pathname, handler) => {
   const dispatcher = getDispatcher();
@@ -26,7 +32,7 @@ export const del: MethodHook = (pathname, handler) => {
 };
 
 /** Adds an effect that is executed before and after a request handler. */
-export const use: UseHook = (create) => {
+export const before: UseHook = (create) => {
   const dispatcher = getDispatcher();
   return dispatcher.use(create);
 };

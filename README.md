@@ -24,14 +24,14 @@ export * from "https://github.com/tjosepo/deno_server/raw/main/plugin/mod.ts";
 ### Start programming
 
 ```ts
-import { get, serve, useCors, useLogging } from "./deps.ts";
+import { get, router, useCors, useLogging } from "./deps.ts";
 
-serve(() => {
+Deno.serve(router(() => {
   useLogging();
   useCors();
 
   get("/", () => "Hello world!");
-});
+}));
 ```
 
 ## Documentation

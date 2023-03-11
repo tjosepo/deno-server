@@ -1,23 +1,24 @@
+export type Method = "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
+
 export type Context = {
   request: Request;
   params: Record<string, string>;
 };
 
 export type HandlerResponse =
-  | Promise<Response | BodyInit | null | undefined | void>
   | Response
   | BodyInit
   | null
   | undefined
-  | void;
+  | Promise<Response | BodyInit | null | undefined>;
 
 export type MethodHook = (
   pathname: string,
-  handler: (ctx: Context) => HandlerResponse,
+  handler: (req: Request) => HandlerResponse
 ) => void;
 
 export type UseHook = (
-  create: (request: Request) => UseCleanup | Promise<UseCleanup> | void,
+  create: (request: Request) => UseCleanup | Promise<UseCleanup> | void
 ) => void;
 
 export type CleanupContext = {
@@ -32,8 +33,8 @@ export type PathHook = (pathname: string, fn: () => void) => void;
 export interface Dispatcher {
   get: MethodHook;
   post: MethodHook;
-  put: MethodHook;
+  patch: MethodHook;
   del: MethodHook;
-  use: UseHook;
+  put: MethodHook;
   path: PathHook;
 }

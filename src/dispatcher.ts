@@ -1,11 +1,8 @@
 import type {
-  Context,
   Dispatcher,
   HandlerResponse,
   MethodHook,
   PathHook,
-  UseCleanup,
-  UseHook,
 } from "./types.ts";
 import { posix } from "./deps.ts";
 
@@ -27,37 +24,35 @@ export const getDispatcher = (): Dispatcher => {
 interface Route {
   method: string;
   pattern: URLPattern;
-  handler: (ctx: Context) => HandlerResponse;
-  effects: ((request: Request) => UseCleanup | Promise<UseCleanup> | void)[];
+  handler: (request: Request) => HandlerResponse;
 }
 
 export class ServeDispatcher implements Dispatcher {
   routes: Route[] = [];
-  effects: ((request: Request) => UseCleanup | Promise<UseCleanup> | void)[] =
-    [];
 
   get: MethodHook = (pathname, handler) => {
     const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
-    this.routes.push({ method: "GET", pattern, handler, effects: [] });
+    this.routes.push({ method: "GET", pattern, handler });
   };
 
   post: MethodHook = (pathname, handler) => {
     const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
-    this.routes.push({ method: "POST", pattern, handler, effects: [] });
+    this.routes.push({ method: "POST", pattern, handler });
+  };
+
+  patch: MethodHook = (pathname, handler) => {
+    const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
+    this.routes.push({ method: "PATCH", pattern, handler });
+  }
+
+  del: MethodHook = (pathname, handler) => {
+    const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
+    this.routes.push({ method: "DELETE", pattern, handler});
   };
 
   put: MethodHook = (pathname, handler) => {
     const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
-    this.routes.push({ method: "PUT", pattern, handler, effects: [] });
-  };
-
-  del: MethodHook = (pathname, handler) => {
-    const pattern = new URLPattern({ pathname: posix.normalize(pathname) });
-    this.routes.push({ method: "DELETE", pattern, handler, effects: [] });
-  };
-
-  use: UseHook = (create) => {
-    this.effects.push(create);
+    this.routes.push({ method: "PUT", pattern, handler });
   };
 
   path: PathHook = (pathname, fn) => {
@@ -68,14 +63,8 @@ export class ServeDispatcher implements Dispatcher {
     setDispatcher(this);
 
     const routes = dispatcher.routes.map<Route>((route) => {
-      return {
-        method: route.method,
-        pattern: new URLPattern({
-          pathname: posix.join(pathname, route.pattern.pathname),
-        }),
-        handler: route.handler,
-        effects: [...dispatcher.effects, ...route.effects],
-      };
+      const pattern = new URLPattern({ pathname: posix.join(pathname, route.pattern.pathname) });
+      return { method: route.method, pattern, handler: route.handler };
     });
 
     this.routes.push(...routes);
